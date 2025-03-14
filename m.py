@@ -10,7 +10,7 @@ import json
 import os
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('8048715452:AAGpMs2aMat59zaifZ0OD7zdI5Uw1jJ7hOw')
+bot = telebot.TeleBot('7053228704:AAHxO-iTlIdVbzs1ghEXGPxLicbLgFXRdZM')
 
 # ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002252633433"
