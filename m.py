@@ -50,9 +50,13 @@ def validate_key(key, user_id):
                 del redeem_log[user_id]
                 save_redeem_log(redeem_log)
 
-    return False   
+    return False 
+  
+# ✅ पहले Redeem Log लोड करो
+redeem_log = load_redeem_log()
 
-def remove_expired_users():
+# ✅ अब Expired Users को Remove करो
+remove_expired_users()
     now = datetime.datetime.now(IST)
     expired_users = []
 
