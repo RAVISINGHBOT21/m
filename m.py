@@ -11,7 +11,7 @@ import os
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton  # ✅ FIXED IMPORT ERROR
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAGRC0PMM4n3zLuUFWsNTw3oitSdYOTf5dg')
+bot = telebot.TeleBot('7053228704:AAGOtH3AKk_Xhs-BiqzJj0NcHvb47cvRYsg')
 
 # ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002252633433"
@@ -114,6 +114,49 @@ def generate_key(days=0, hours=0):
     write_keys(keys)
     return new_key
 
+def remove_key(key):
+    if key in keys:
+        del keys[key]
+        write_keys(keys)
+
+        # ✅ अब उस Key को यूज़ करने वाले यूज़र को भी हटाओ
+        user_to_remove = None
+        for user_id, user_key in redeem_log.items():
+            if user_key == key:
+                user_to_remove = user_id
+                break
+
+        if user_to_remove:
+            redeem_log.pop(user_to_remove, None)  # ✅ User को redeem_log से हटाओ
+            allowed_users.discard(user_to_remove)  # ✅ User को allowed_users से हटाओ
+
+            # ✅ Users file अपडेट करो
+            with open(USER_FILE, "w") as file:
+                file.writelines("\n".join(allowed_users))
+
+            save_redeem_log(redeem_log)  # ✅ Updated Log Save करो
+
+        return True
+    return False
+
+def is_user_allowed(user_id):
+    now = datetime.datetime.now(IST)
+    if user_id in redeem_log:
+        key = redeem_log[user_id]
+        if key in keys and now > keys[key]:
+            # ✅ अगर Key expire हो गई, तो यूजर को remove कर दो
+            del keys[key]  # Expired Key हटाओ
+            del redeem_log[user_id]  # Redeem Log से यूजर हटाओ
+            allowed_users.discard(user_id)  # Allowed Users से हटाओ
+            save_redeem_log(redeem_log)
+            write_keys(keys)
+
+            # ✅ Users file अपडेट करो
+            with open(USER_FILE, "w") as file:
+                file.writelines("\n".join(allowed_users))
+            return False  # ❌ अब यह यूजर blocked हो गया
+    return user_id in allowed_users
+
 # ✅ /START Command (Welcome + Help Button)
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -155,12 +198,14 @@ def help_callback(call):
 @bot.message_handler(commands=['genkey'])
 def generate_new_key(message):
     if str(message.from_user.id) not in ADMINS:
-         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return  # **✅ फिक्स: अगर एडमिन नहीं है तो रिटर्न करो**
 
     command = message.text.split()
 
     if len(command) < 2:
         bot.reply_to(message, "⚠ USAGE: /genkey <DAYS> [HOURS]")
+        return  # **✅ फिक्स: अगर कमांड सही फॉर्मेट में नहीं है तो रिटर्न करो**
 
     try:
         days = int(command[1])
@@ -281,6 +326,9 @@ def handle_attack(message):
     user_id = str(message.from_user.id)
     chat_id = str(message.chat.id)
 
+    if not is_user_allowed(user_id):  # ✅ Expired Key Check
+        bot.reply_to(message, "⏳ **YOUR KEY HAS EXPIRED! PLEASE REDEEM A NEW KEY.**")
+
     if chat_id != GROUP_ID:
         bot.reply_to(message, "❌ YOU CAN USE THIS COMMAND ONLY IN THE ATTACK GROUP!")
         return
@@ -337,8 +385,9 @@ def handle_attack(message):
 # ✅ /STATS Command - Shows Only Active Attacks
 @bot.message_handler(commands=['stats'])
 def attack_stats(message):
-    if str(message.from_user.id) not in ADMINS:
-         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+if not active_attacks:
+        bot.reply_to(message, "📊 No Active Attacks Right Now!")
+        return
 
     now = datetime.datetime.now(IST)
 
@@ -347,10 +396,6 @@ def attack_stats(message):
         active_attacks[user_id] = [attack for attack in active_attacks[user_id] if attack[2] > now]
         if not active_attacks[user_id]:  # अगर कोई अटैक बचा नहीं, तो एंट्री ही हटा दो
             del active_attacks[user_id]
-
-    if not active_attacks:
-        bot.reply_to(message, "📊 No Active Attacks Right Now!")
-        return
 
     stats_message = "📊 **ACTIVE ATTACKS:**\n\n"
 
@@ -365,9 +410,6 @@ def attack_stats(message):
 # ✅ /CHECK Command (List Active Keys)
 @bot.message_handler(commands=['check'])
 def check_keys(message):
-    if str(message.from_user.id) not in ADMINS:
-         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-
     if not keys:
         bot.reply_to(message, "❌ NO ACTIVE KEYS!")
         return
@@ -386,7 +428,10 @@ def my_info(message):
     username = user.username if user.username else "N/A"
     first_name = user.first_name if user.first_name else "N/A"
     last_name = user.last_name if user.last_name else "N/A"
-    
+   
+    if not is_user_allowed(user_id):
+    bot.reply_to(message, "⏳ **YOUR KEY HAS EXPIRED! PLEASE REDEEM A NEW KEY.**")
+               
     is_admin = "✅ YES" if user_id in ADMINS else "❌ NO"
     has_access = "✅ YES" if user_id in allowed_users else "❌ NO"
 
