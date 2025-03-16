@@ -11,7 +11,7 @@ import os
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton  # ✅ FIXED IMPORT ERROR
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAGOtH3AKk_Xhs-BiqzJj0NcHvb47cvRYsg')
+bot = telebot.TeleBot('7053228704:AAHd3RM3gxJWwxIdwRm_-RU4YQjw2U2WbYs')
 
 # ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002252633433"
