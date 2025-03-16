@@ -186,8 +186,8 @@ def help_callback(call):
 @bot.message_handler(commands=['genkey'])
 def generate_new_key(message):
     if str(message.from_user.id) not in ADMINS:
-    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-    return
+         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
 
     command = message.text.split()
 
@@ -223,8 +223,8 @@ def generate_new_key(message):
 @bot.message_handler(commands=['removekey'])
 def remove_existing_key(message):
     if str(message.from_user.id) not in ADMINS:
-    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-    return
+         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
 
     command = message.text.split()
     if len(command) != 2:
@@ -372,8 +372,8 @@ def handle_attack(message):
 @bot.message_handler(commands=['stats'])
 def attack_stats(message):
     if str(message.from_user.id) not in ADMINS:
-    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-    return
+         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
 
     now = datetime.datetime.now(IST)
 
@@ -401,8 +401,8 @@ def attack_stats(message):
 @bot.message_handler(commands=['check'])
 def check_keys(message):
     if str(message.from_user.id) not in ADMINS:
-    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-    return
+         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
 
     if not keys:
         bot.reply_to(message, "❌ NO ACTIVE KEYS!")
