@@ -327,14 +327,14 @@ def handle_attack(message):
     chat_id = str(message.chat.id)
 
     if not is_user_allowed(user_id):  # ✅ Expired Key Check
-        bot.reply_to(message, "⏳ **YOUR KEY HAS EXPIRED! PLEASE REDEEM A NEW KEY.**")
+        bot.reply_to(message, "⏳ **YOUR KEY NOT APPROVED! PLEASE REDEEM A NEW KEY.**")
 
     if chat_id != GROUP_ID:
         bot.reply_to(message, "❌ YOU CAN USE THIS COMMAND ONLY IN THE ATTACK GROUP!")
         return
 
     if user_id not in allowed_users:
-        bot.reply_to(message, "❌ YOU NEED TO REDEEM A KEY FIRST!")
+        bot.reply_to(message, "❌ KEY BUY KRKE AANA MATHERCOD! FREE MAIN NHI MILEGA DM- @R_DANGER77 ")
         return
 
     command = message.text.split()
@@ -383,18 +383,19 @@ def handle_attack(message):
     threading.Thread(target=attack_execution).start()
 
 # ✅ /STATS Command - Shows Only Active Attacks
+# ✅ /STATS Command - Shows Only Active Attacks
 @bot.message_handler(commands=['stats'])
 def attack_stats(message):
-if not active_attacks:
+    if not active_attacks:  # ✅ INDENTATION FIXED
         bot.reply_to(message, "📊 No Active Attacks Right Now!")
-        return
+        return  # ✅ यह लाइन सही से इंडेंट होनी चाहिए
 
     now = datetime.datetime.now(IST)
 
     # ✅ खत्म हुए अटैक हटाओ
     for user_id in list(active_attacks.keys()):
         active_attacks[user_id] = [attack for attack in active_attacks[user_id] if attack[2] > now]
-        if not active_attacks[user_id]:  # अगर कोई अटैक बचा नहीं, तो एंट्री ही हटा दो
+        if not active_attacks[user_id]:  
             del active_attacks[user_id]
 
     stats_message = "📊 **ACTIVE ATTACKS:**\n\n"
@@ -407,19 +408,6 @@ if not active_attacks:
 
     bot.reply_to(message, stats_message, parse_mode="Markdown")
 
-# ✅ /CHECK Command (List Active Keys)
-@bot.message_handler(commands=['check'])
-def check_keys(message):
-    if not keys:
-        bot.reply_to(message, "❌ NO ACTIVE KEYS!")
-        return
-
-    key_list = "🔑 **ACTIVE KEYS:**\n"
-    for key, expiry in keys.items():
-        key_list += f"🔹 `{key}` - 📅 Expires: {expiry.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
-
-    bot.reply_to(message, key_list, parse_mode="Markdown")
-
 # ✅ /MYINFO Command (Shows User Details + Key Expiry)
 @bot.message_handler(commands=['myinfo'])
 def my_info(message):
@@ -428,10 +416,12 @@ def my_info(message):
     username = user.username if user.username else "N/A"
     first_name = user.first_name if user.first_name else "N/A"
     last_name = user.last_name if user.last_name else "N/A"
-   
+
+    # ✅ अगर यूजर की Key एक्सपायर हो चुकी है
     if not is_user_allowed(user_id):
-    bot.reply_to(message, "⏳ **YOUR KEY HAS EXPIRED! PLEASE REDEEM A NEW KEY.**")
-               
+        bot.reply_to(message, "⏳ **PEHLE KEY BIY KR! PLEASE REDEEM A KEY.**")
+        return  # ✅ FIX: यहाँ से फंक्शन को रोक देना चाहिए
+
     is_admin = "✅ YES" if user_id in ADMINS else "❌ NO"
     has_access = "✅ YES" if user_id in allowed_users else "❌ NO"
 
