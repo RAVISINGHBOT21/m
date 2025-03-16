@@ -8,9 +8,8 @@ import string
 import pytz
 import json
 import os
-from telebot.types import
-InlineKeyboardMarkup,
-InlineKeyboardButton
+import InlineKeyboardMarkup
+import InlineKeyboardButton
 
 # ✅ TELEGRAM BOT TOKEN
 bot = telebot.TeleBot('7053228704:AAGRC0PMM4n3zLuUFWsNTw3oitSdYOTf5dg')
@@ -28,6 +27,63 @@ REDEEM_LOG_FILE = "redeem_log.json"
 
 # ✅ Timezone सेट (IST)
 IST = pytz.timezone('Asia/Kolkata')
+
+def validate_key(key, user_id):
+    now = datetime.datetime.now(IST)
+    
+    if key in keys:
+        if now < keys[key]:
+            return True
+        else:
+            # ✅ Key Expired: Remove User from allowed_users
+            if user_id in allowed_users:
+                allowed_users.remove(user_id)
+                with open(USER_FILE, "w") as file:
+                    file.writelines("\n".join(allowed_users))
+            
+            # ✅ Expired Key को Delete करो  
+            del keys[key]
+            write_keys(keys)
+
+            # ✅ Redeem Log से भी यूजर हटाओ  
+            if user_id in redeem_log:
+                del redeem_log[user_id]
+                save_redeem_log(redeem_log)
+
+    return False   
+
+def remove_expired_users():
+    now = datetime.datetime.now(IST)
+    expired_users = []
+
+    # ✅ Check करो कि कौन-कौन से यूज़र्स की Key Expire हो चुकी है
+    for user_id, key in redeem_log.items():
+        if key in keys and now > keys[key]:  # अगर Key Expired हो गई है
+            expired_users.append(user_id)
+
+    # ✅ Expired Users को allowed_users से Remove करो
+    for user_id in expired_users:
+        if user_id in allowed_users:
+            allowed_users.remove(user_id)
+
+        # ✅ Redeem Log से यूज़र हटाओ
+        del redeem_log[user_id]
+
+    # ✅ Expired Keys को Delete करो
+    for key in list(keys.keys()):
+        if now > keys[key]:
+            del keys[key]
+
+    # ✅ Updated Data को Save करो
+    save_redeem_log(redeem_log)
+    write_keys(keys)
+
+    with open(USER_FILE, "w") as file:
+        file.writelines("\n".join(allowed_users))
+
+# ✅ जब बॉट स्टार्ट हो, तब Expired Users Remove हो जाएं
+remove_expired_users()
+
 
 # ✅ Redeem Log लोड/सेव फंक्शन
 def load_redeem_log():
@@ -88,62 +144,6 @@ def generate_key(days=0, hours=0):
     keys[new_key] = expiry
     write_keys(keys)
     return new_key
-
-     def validate_key(key, user_id):
-    now = datetime.datetime.now(IST)
-    
-    if key in keys:
-        if now < keys[key]:
-            return True
-        else:
-            # ✅ Key Expired: Remove User from allowed_users
-            if user_id in allowed_users:
-                allowed_users.remove(user_id)
-                with open(USER_FILE, "w") as file:
-                    file.writelines("\n".join(allowed_users))
-            
-            # ✅ Expired Key को Delete करो  
-            del keys[key]
-            write_keys(keys)
-
-            # ✅ Redeem Log से भी यूजर हटाओ  
-            if user_id in redeem_log:
-                del redeem_log[user_id]
-                save_redeem_log(redeem_log)
-
-    return False   
-
-def remove_expired_users():
-    now = datetime.datetime.now(IST)
-    expired_users = []
-
-    # ✅ Check करो कि कौन-कौन से यूज़र्स की Key Expire हो चुकी है
-    for user_id, key in redeem_log.items():
-        if key in keys and now > keys[key]:  # अगर Key Expired हो गई है
-            expired_users.append(user_id)
-
-    # ✅ Expired Users को allowed_users से Remove करो
-    for user_id in expired_users:
-        if user_id in allowed_users:
-            allowed_users.remove(user_id)
-
-        # ✅ Redeem Log से यूज़र हटाओ
-        del redeem_log[user_id]
-
-    # ✅ Expired Keys को Delete करो
-    for key in list(keys.keys()):
-        if now > keys[key]:
-            del keys[key]
-
-    # ✅ Updated Data को Save करो
-    save_redeem_log(redeem_log)
-    write_keys(keys)
-
-    with open(USER_FILE, "w") as file:
-        file.writelines("\n".join(allowed_users))
-
-# ✅ जब बॉट स्टार्ट हो, तब Expired Users Remove हो जाएं
-remove_expired_users()
 
 # ✅ /START Command (Welcome + Help Button)
 @bot.message_handler(commands=['start'])
