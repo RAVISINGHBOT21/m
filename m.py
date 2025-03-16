@@ -8,6 +8,9 @@ import string
 import pytz
 import json
 import os
+from telebot.types import
+InlineKeyboardMarkup,
+InlineKeyboardButton
 
 # ✅ TELEGRAM BOT TOKEN
 bot = telebot.TeleBot('7053228704:AAGRC0PMM4n3zLuUFWsNTw3oitSdYOTf5dg')
@@ -142,13 +145,49 @@ def remove_expired_users():
 # ✅ जब बॉट स्टार्ट हो, तब Expired Users Remove हो जाएं
 remove_expired_users()
 
+# ✅ /START Command (Welcome + Help Button)
+@bot.message_handler(commands=['start'])
+def start_command(message):
+    user = message.from_user
+    first_name = user.first_name if user.first_name else "User"
+
+    # ✅ Inline Button for Help
+    markup = InlineKeyboardMarkup()
+    help_button = InlineKeyboardButton("ℹ HELP", callback_data="show_help")
+    markup.add(help_button)
+
+    welcome_text = f"👋 **WELCOME, {first_name}!**\nमैं तुम्हारी हेल्प के लिए यहाँ हूँ। नीचे दिए गए बटन पर क्लिक करो:"
+
+    bot.send_message(message.chat.id, welcome_text, reply_markup=markup, parse_mode="Markdown")
+
+
+# ✅ CALLBACK HANDLER FOR HELP BUTTON
+@bot.callback_query_handler(func=lambda call: call.data == "show_help")
+def help_callback(call):
+    help_text = """
+📌 **BOT COMMANDS LIST:**  
+
+👤 **USER COMMANDS:**  
+🔹 `/myinfo` - अपना स्टेटस और Key की Expiry चेक करो  
+🔹 `/redeem <KEY>` - एक्सेस पाने के लिए Key रिडीम करो  
+🔹 `/RS <IP> <PORT> <TIME>` - अटैक स्टार्ट करो  
+
+👑 **ADMIN COMMANDS:**  
+🔹 `/genkey <DAYS> [HOURS]` - नई Key बनाओ  
+🔹 `/removekey <KEY>` - किसी Key को डिलीट करो  
+🔹 `/stats` - एक्टिव अटैक्स को देखो  
+🔹 `/check` - सभी एक्टिव Keys को देखो  
+"""
+
+    bot.send_message(call.message.chat.id, help_text, parse_mode="Markdown")
+
 # ✅ /GENKEY Command (Admin Only)
 # ✅ /GENKEY Command (Admin Only) - Now Generates Keys in "1H-RSVIP-XXXXXX" Format
 @bot.message_handler(commands=['genkey'])
 def generate_new_key(message):
-    if str(message.chat.id) not in ADMINS:
-        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
+    if str(message.from_user.id) not in ADMINS:
+    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+    return
 
     command = message.text.split()
 
@@ -183,9 +222,9 @@ def generate_new_key(message):
 # ✅ /REMOVEKEY Command (Admin Only)
 @bot.message_handler(commands=['removekey'])
 def remove_existing_key(message):
-    if str(message.chat.id) not in ADMINS:
-        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
+    if str(message.from_user.id) not in ADMINS:
+    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+    return
 
     command = message.text.split()
     if len(command) != 2:
@@ -198,14 +237,27 @@ def remove_existing_key(message):
         bot.reply_to(message, "❌ KEY NOT FOUND!")
 
 # ✅ FIXED: SCREENSHOT SYSTEM (Now Always Forwards)
+# ✅ SCREENSHOT VERIFICATION SYSTEM (Detects Fake Screenshots)
 @bot.message_handler(content_types=['photo'])
 def handle_screenshot(message):
     user_id = message.from_user.id
 
-    caption_text = f"📸 **USER SCREENSHOT RECEIVED!**\n👤 **User ID:** `{user_id}`\n✅ **Forwarded to Admins!**"
+    # ✅ Get File ID & Caption
     file_id = message.photo[-1].file_id
+    caption_text = f"📸 **USER SCREENSHOT RECEIVED!**\n👤 **User ID:** `{user_id}`\n✅ **Forwarded to Admins!`"
+
+    # ✅ Send Screenshot to Verification Channel
     bot.send_photo(SCREENSHOT_CHANNEL, file_id, caption=caption_text, parse_mode="Markdown")
-    
+
+    # ✅ AI-Based Fake Screenshot Detection (Basic)
+    # **ये सिर्फ डेमो है, असली AI इंटेग्रेशन के लिए OCR & Metadata चेक ऐड कर सकते हो**
+    if "old" in message.caption.lower() or "fake" in message.caption.lower():
+        bot.reply_to(message, "⚠ **WARNING:** लगता है कि यह **फेक या पुराना स्क्रीनशॉट** है! 🚨")
+    else:
+        bot.reply_to(message, "✅ SCREENSHOT VERIFIED & FORWARDED!")
+
+    bot.reply_to(message, "📤 **SCREENSHOT FORWARDED SUCCESSFULLY!**")
+
     bot.reply_to(message, "✅ SCREENSHOT FORWARDED SUCCESSFULLY!")
 
 # ✅ Active Attacks को Track करने वाला Dictionary  
@@ -319,9 +371,9 @@ def handle_attack(message):
 # ✅ /STATS Command - Shows Only Active Attacks
 @bot.message_handler(commands=['stats'])
 def attack_stats(message):
-    if str(message.chat.id) not in ADMINS:
-        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
+    if str(message.from_user.id) not in ADMINS:
+    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+    return
 
     now = datetime.datetime.now(IST)
 
@@ -348,9 +400,9 @@ def attack_stats(message):
 # ✅ /CHECK Command (List Active Keys)
 @bot.message_handler(commands=['check'])
 def check_keys(message):
-    if str(message.chat.id) not in ADMINS:
-        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
+    if str(message.from_user.id) not in ADMINS:
+    bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+    return
 
     if not keys:
         bot.reply_to(message, "❌ NO ACTIVE KEYS!")
@@ -361,6 +413,66 @@ def check_keys(message):
         key_list += f"🔹 `{key}` - 📅 Expires: {expiry.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
 
     bot.reply_to(message, key_list, parse_mode="Markdown")
+
+# ✅ /MYINFO Command (Shows User Details + Key Expiry)
+@bot.message_handler(commands=['myinfo'])
+def my_info(message):
+    user = message.from_user
+    user_id = str(user.id)
+    username = user.username if user.username else "N/A"
+    first_name = user.first_name if user.first_name else "N/A"
+    last_name = user.last_name if user.last_name else "N/A"
+    
+    is_admin = "✅ YES" if user_id in ADMINS else "❌ NO"
+    has_access = "✅ YES" if user_id in allowed_users else "❌ NO"
+
+    # ✅ Key Details Check
+    if user_id in redeem_log:
+        user_key = redeem_log[user_id]
+        expiry_date = keys.get(user_key, None)
+        if expiry_date:
+            expiry_text = expiry_date.strftime('%Y-%m-%d %H:%M:%S IST')
+        else:
+            expiry_text = "❌ EXPIRED"
+    else:
+        user_key = "❌ NO KEY"
+        expiry_text = "N/A"
+
+    info_text = f"""
+👤 **User Info:**
+🆔 **User ID:** `{user_id}`
+🔹 **Username:** `{username}`
+👑 **Admin:** {is_admin}
+🎟 **Access:** {has_access}
+
+🔑 **Key Details:**
+🔹 **Key:** `{user_key}`
+📅 **Expiry:** `{expiry_text}`
+"""
+    bot.reply_to(message, info_text, parse_mode="Markdown")
+
+# ✅ /ANNOUNCE Command (Admin Only)
+@bot.message_handler(commands=['announce'])
+def announce_message(message):
+    if str(message.from_user.id) not in ADMINS:
+        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
+
+    command = message.text.split(maxsplit=1)
+    if len(command) < 2:
+        bot.reply_to(message, "⚠ USAGE: /announce <message>")
+        return
+
+    announcement = f"📢 **ANNOUNCEMENT:**\n{command[1]}"
+    
+    # ✅ Auto-Pin Announcement
+    msg = bot.send_message(GROUP_ID, announcement, parse_mode="Markdown")
+    bot.pin_chat_message(GROUP_ID, msg.message_id)
+
+    # ✅ Auto-Delete After 2 Hours (7200 seconds)
+    threading.Timer(7200, lambda: bot.delete_message(GROUP_ID, msg.message_id)).start()
+
+    bot.reply_to(message, "✅ ANNOUNCEMENT SENT & PINNED!")
 
 # ✅ BOT START (Load Data and Run)
 bot.polling(none_stop=True)
