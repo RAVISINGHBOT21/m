@@ -193,7 +193,6 @@ def generate_new_key(message):
 
     if len(command) < 2:
         bot.reply_to(message, "⚠ USAGE: /genkey <DAYS> [HOURS]")
-        return
 
     try:
         days = int(command[1])
@@ -224,12 +223,11 @@ def generate_new_key(message):
 def remove_existing_key(message):
     if str(message.from_user.id) not in ADMINS:
          bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
 
     command = message.text.split()
     if len(command) != 2:
         bot.reply_to(message, "⚠ USAGE: /removekey <KEY>")
-        return
+        return 
 
     if remove_key(command[1]):
         bot.reply_to(message, "✅ KEY REMOVED SUCCESSFULLY!")
@@ -373,7 +371,6 @@ def handle_attack(message):
 def attack_stats(message):
     if str(message.from_user.id) not in ADMINS:
          bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
 
     now = datetime.datetime.now(IST)
 
@@ -402,7 +399,6 @@ def attack_stats(message):
 def check_keys(message):
     if str(message.from_user.id) not in ADMINS:
          bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
 
     if not keys:
         bot.reply_to(message, "❌ NO ACTIVE KEYS!")
