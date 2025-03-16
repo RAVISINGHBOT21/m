@@ -10,7 +10,7 @@ import json
 import os
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAEhItwEO___4Mbqa9TZUitrkZVurspDARE')
+bot = telebot.TeleBot('7053228704:AAGRC0PMM4n3zLuUFWsNTw3oitSdYOTf5dg')
 
 # ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002252633433"
@@ -86,17 +86,61 @@ def generate_key(days=0, hours=0):
     write_keys(keys)
     return new_key
 
-def validate_key(key):
-    if key in keys and datetime.datetime.now(IST) < keys[key]:
-        return True
-    return False
-
-def remove_key(key):
+     def validate_key(key, user_id):
+    now = datetime.datetime.now(IST)
+    
     if key in keys:
-        del keys[key]
-        write_keys(keys)
-        return True
-    return False
+        if now < keys[key]:
+            return True
+        else:
+            # ✅ Key Expired: Remove User from allowed_users
+            if user_id in allowed_users:
+                allowed_users.remove(user_id)
+                with open(USER_FILE, "w") as file:
+                    file.writelines("\n".join(allowed_users))
+            
+            # ✅ Expired Key को Delete करो  
+            del keys[key]
+            write_keys(keys)
+
+            # ✅ Redeem Log से भी यूजर हटाओ  
+            if user_id in redeem_log:
+                del redeem_log[user_id]
+                save_redeem_log(redeem_log)
+
+    return False   
+
+def remove_expired_users():
+    now = datetime.datetime.now(IST)
+    expired_users = []
+
+    # ✅ Check करो कि कौन-कौन से यूज़र्स की Key Expire हो चुकी है
+    for user_id, key in redeem_log.items():
+        if key in keys and now > keys[key]:  # अगर Key Expired हो गई है
+            expired_users.append(user_id)
+
+    # ✅ Expired Users को allowed_users से Remove करो
+    for user_id in expired_users:
+        if user_id in allowed_users:
+            allowed_users.remove(user_id)
+
+        # ✅ Redeem Log से यूज़र हटाओ
+        del redeem_log[user_id]
+
+    # ✅ Expired Keys को Delete करो
+    for key in list(keys.keys()):
+        if now > keys[key]:
+            del keys[key]
+
+    # ✅ Updated Data को Save करो
+    save_redeem_log(redeem_log)
+    write_keys(keys)
+
+    with open(USER_FILE, "w") as file:
+        file.writelines("\n".join(allowed_users))
+
+# ✅ जब बॉट स्टार्ट हो, तब Expired Users Remove हो जाएं
+remove_expired_users()
 
 # ✅ /GENKEY Command (Admin Only)
 # ✅ /GENKEY Command (Admin Only) - Now Generates Keys in "1H-RSVIP-XXXXXX" Format
@@ -179,18 +223,17 @@ def redeem_key(message):
     user_name = message.from_user.first_name  
     key = command[1]
 
-    # ✅ पहले से Redeemed Check करो
-    for uid, k in redeem_log.items():
-        if k == key:
-            bot.reply_to(message, f"❌ THIS KEY HAS ALREADY BEEN REDEEMED!\n👤 **User:** `{uid}`\n🆔 **User ID:** `{uid}`", parse_mode="Markdown")
-            return
-
-    # ✅ पहले Key Valid है या नहीं चेक करो
-    if key not in keys:
-        bot.reply_to(message, "❌ INVALID KEY! 🔑")  # ✅ अब अलग से INVALID KEY दिखेगा
+    # ✅ अगर User पहले से कोई Key Redeem कर चुका है
+    if user_id in redeem_log:
+        bot.reply_to(message, f"❌ YOU HAVE ALREADY REDEEMED A KEY!\n🔑 **Your Key:** `{redeem_log[user_id]}`", parse_mode="Markdown")
         return
 
-    # ✅ Expiry Check करो
+    # ✅ Check अगर Key Exist नहीं करती  
+    if key not in keys:
+        bot.reply_to(message, "❌ INVALID KEY! 🔑")  
+        return
+
+    # ✅ अगर Key Expired हो गई है  
     expiry_date = keys[key]
     if datetime.datetime.now(IST) > expiry_date:
         del keys[key]  # ✅ Expired Key हटाओ
@@ -198,7 +241,13 @@ def redeem_key(message):
         bot.reply_to(message, f"⏳ THIS KEY HAS **EXPIRED!**\n📅 **Expired On:** `{expiry_date.strftime('%Y-%m-%d %H:%M:%S IST')}`", parse_mode="Markdown")
         return
 
-    # ✅ अब Key को इस User से लिंक कर दो
+    # ✅ Check अगर Key पहले से किसी और ने Redeem कर ली है  
+    if key in redeem_log.values():
+        existing_user = [uid for uid, k in redeem_log.items() if k == key][0]
+        bot.reply_to(message, f"❌ THIS KEY HAS ALREADY BEEN REDEEMED!\n👤 **User ID:** `{existing_user}`", parse_mode="Markdown")
+        return
+
+    # ✅ Grant Access & Save User  
     allowed_users.add(user_id)
     redeem_log[user_id] = key
     save_redeem_log(redeem_log)
