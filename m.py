@@ -187,7 +187,6 @@ def help_callback(call):
 def generate_new_key(message):
     if str(message.from_user.id) not in ADMINS:
          bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
-        return
 
     command = message.text.split()
 
