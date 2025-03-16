@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import telebot
+import time
 import datetime
 import subprocess
 import threading
@@ -473,5 +474,26 @@ def announce_message(message):
 
     bot.reply_to(message, "✅ ANNOUNCEMENT SENT & PINNED!")
 
-# ✅ BOT START (Load Data and Run)
-bot.polling(none_stop=True)
+# ✅ /CHECK Command (List Active Keys)
+@bot.message_handler(commands=['check'])
+def check_keys(message):
+    if str(message.chat.id) not in ADMINS:
+        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
+
+    if not keys:
+        bot.reply_to(message, "❌ NO ACTIVE KEYS!")
+        return
+
+    key_list = "🔑 **ACTIVE KEYS:**\n"
+    for key, expiry in keys.items():
+        key_list += f"🔹 `{key}` - 📅 Expires: {expiry.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
+
+    bot.reply_to(message, key_list, parse_mode="Markdown")
+
+while True:
+    try:
+        bot.polling(none_stop=True, interval=0)
+    except Exception as e:
+        print(f"Polling Error: {e}")
+        time.sleep(5)  # कुछ सेकंड wait करके फिर से start करेगा
