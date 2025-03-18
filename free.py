@@ -4,6 +4,8 @@ import datetime
 import time
 import subprocess
 import threading
+import logging
+import os
 from telebot import types
 
 # TELEGRAM BOT TOKEN
@@ -40,6 +42,35 @@ def verify_screenshot(user_id, message):
         del pending_feedback[user_id]  
     else:
         bot.reply_to(message, "❌ AB SCREENSHOT BHEJNE KI ZAROORAT NAHI HAI!")
+
+# ✅ ERROR LOGGING SETUP
+logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+
+CRASH_COUNT = 0  # कितनी बार बॉट क्रैश हुआ
+MAX_CRASH_LIMIT = 5  # अगर 5 बार क्रैश हुआ तो stop हो जाएगा
+RESTART_DELAY = 5  # Restart से पहले 5 सेकंड का delay
+
+def start_bot():
+    global CRASH_COUNT
+
+    while True:
+        try:
+            print("🚀 BOT STARTING...")
+            os.system("python3 m.py")  # ✅ अपने बॉट की `m.py` फाइल को चलाओ
+        except Exception as e:
+            logging.error(f"Bot Crashed! Error: {e}")
+            print(f"❌ BOT CRASHED! ERROR: {e}")
+
+            CRASH_COUNT += 1
+            if CRASH_COUNT >= MAX_CRASH_LIMIT:
+                print("🚫 MAXIMUM CRASH LIMIT REACHED! BOT STOPPED.")
+                break  # ✅ अगर बॉट 5 बार क्रैश हुआ, तो रोक दो
+
+            print(f"♻ RESTARTING IN {RESTART_DELAY} SECONDS...")
+            time.sleep(RESTART_DELAY)  # ✅ थोड़ी देर रुको और फिर restart करो
+
+if __name__ == "__main__":
+    start_bot()
 
 # HANDLE ATTACK COMMAND
 @bot.message_handler(commands=['RS'])

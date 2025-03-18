@@ -9,6 +9,7 @@ import string
 import pytz
 import json
 import os
+import logging
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton  # ✅ FIXED IMPORT ERROR
 
 # ✅ TELEGRAM BOT TOKEN
@@ -173,6 +174,28 @@ def start_command(message):
 
     bot.send_message(message.chat.id, welcome_text, reply_markup=markup, parse_mode="Markdown")
 
+# ✅ LOGGING SETUP
+logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+
+CRASH_COUNT = 0  # कितनी बार बॉट क्रैश हुआ
+MAX_CRASH_LIMIT = 5  # अगर 5 बार क्रैश हुआ तो stop हो जाएगा
+RESTART_DELAY = 5  # Restart से पहले 5 सेकंड का delay
+
+while True:
+    try:
+        print("🚀 BOT STARTING...")
+        bot.polling(none_stop=True, interval=0)  # ✅ बॉट स्टार्ट करो
+    except Exception as e:
+        logging.error(f"❌ BOT CRASHED! ERROR: {e}")
+        print(f"❌ BOT CRASHED! ERROR: {e}")
+
+        CRASH_COUNT += 1
+        if CRASH_COUNT >= MAX_CRASH_LIMIT:
+            print("🚫 MAXIMUM CRASH LIMIT REACHED! BOT STOPPED.")
+            break  # ✅ अगर बॉट 5 बार क्रैश हुआ, तो रोक दो
+
+        print(f"♻ RESTARTING IN {RESTART_DELAY} SECONDS...")
+        time.sleep(RESTART_DELAY)  # ✅ थोड़ी देर रुको और फिर restart करो
 
 # ✅ CALLBACK HANDLER FOR HELP BUTTON
 @bot.callback_query_handler(func=lambda call: call.data == "show_help")
@@ -230,7 +253,7 @@ def generate_new_key(message):
     keys[new_key] = expiry
     write_keys(keys)
 
-    bot.reply_to(message, f"✅ NEW KEY GENERATED:\n🔑 `{new_key}`\n📅 Expiry: {days} Days, {hours} Hours", parse_mode="Markdown")
+    bot.reply_to(message, f"✅ NEW KEY GENERATED:\n?? `{new_key}`\n📅 Expiry: {days} Days, {hours} Hours", parse_mode="Markdown")
 
 # ✅ /REMOVEKEY Command (Admin Only)
 @bot.message_handler(commands=['removekey'])
@@ -249,27 +272,14 @@ def remove_existing_key(message):
         bot.reply_to(message, "❌ KEY NOT FOUND!")
 
 # ✅ FIXED: SCREENSHOT SYSTEM (Now Always Forwards)
-# ✅ SCREENSHOT VERIFICATION SYSTEM (Detects Fake Screenshots)
 @bot.message_handler(content_types=['photo'])
 def handle_screenshot(message):
     user_id = message.from_user.id
 
-    # ✅ Get File ID & Caption
+    caption_text = f"📸 **USER SCREENSHOT RECEIVED!**\n👤 **User ID:** `{user_id}`\n✅ **Forwarded to Admins!**"
     file_id = message.photo[-1].file_id
-    caption_text = f"📸 **USER SCREENSHOT RECEIVED!**\n👤 **User ID:** `{user_id}`\n✅ **Forwarded to Admins!`"
-
-    # ✅ Send Screenshot to Verification Channel
     bot.send_photo(SCREENSHOT_CHANNEL, file_id, caption=caption_text, parse_mode="Markdown")
-
-    # ✅ AI-Based Fake Screenshot Detection (Basic)
-    # **ये सिर्फ डेमो है, असली AI इंटेग्रेशन के लिए OCR & Metadata चेक ऐड कर सकते हो**
-    if "old" in message.caption.lower() or "fake" in message.caption.lower():
-        bot.reply_to(message, "⚠ **WARNING:** लगता है कि यह **फेक या पुराना स्क्रीनशॉट** है! 🚨")
-    else:
-        bot.reply_to(message, "✅ SCREENSHOT VERIFIED & FORWARDED!")
-
-    bot.reply_to(message, "📤 **SCREENSHOT FORWARDED SUCCESSFULLY!**")
-
+    
     bot.reply_to(message, "✅ SCREENSHOT FORWARDED SUCCESSFULLY!")
 
 # ✅ Active Attacks को Track करने वाला Dictionary  
