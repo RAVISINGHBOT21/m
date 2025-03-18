@@ -174,29 +174,6 @@ def start_command(message):
 
     bot.send_message(message.chat.id, welcome_text, reply_markup=markup, parse_mode="Markdown")
 
-# ✅ LOGGING SETUP
-logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
-
-CRASH_COUNT = 0  # कितनी बार बॉट क्रैश हुआ
-MAX_CRASH_LIMIT = 5  # अगर 5 बार क्रैश हुआ तो stop हो जाएगा
-RESTART_DELAY = 5  # Restart से पहले 5 सेकंड का delay
-
-while True:
-    try:
-        print("🚀 BOT STARTING...")
-        bot.polling(none_stop=True, interval=0)  # ✅ बॉट स्टार्ट करो
-    except Exception as e:
-        logging.error(f"❌ BOT CRASHED! ERROR: {e}")
-        print(f"❌ BOT CRASHED! ERROR: {e}")
-
-        CRASH_COUNT += 1
-        if CRASH_COUNT >= MAX_CRASH_LIMIT:
-            print("🚫 MAXIMUM CRASH LIMIT REACHED! BOT STOPPED.")
-            break  # ✅ अगर बॉट 5 बार क्रैश हुआ, तो रोक दो
-
-        print(f"♻ RESTARTING IN {RESTART_DELAY} SECONDS...")
-        time.sleep(RESTART_DELAY)  # ✅ थोड़ी देर रुको और फिर restart करो
-
 # ✅ CALLBACK HANDLER FOR HELP BUTTON
 @bot.callback_query_handler(func=lambda call: call.data == "show_help")
 def help_callback(call):
