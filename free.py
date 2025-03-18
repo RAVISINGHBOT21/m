@@ -4,13 +4,10 @@ import datetime
 import time
 import subprocess
 import threading
-import logging
-import pytz
-import os
 from telebot import types
 
 # TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('8111473127:AAERRgnT8TW3fAw_cf_E2FM5zD8j4ae10k8')
+bot = telebot.TeleBot('8048715452:AAGOOIM0peB8Tb6JcFQA_9rCcdmT9FamdrY')
 
 # GROUP AND CHANNEL DETAILS
 GROUP_ID = "-1002369239894"
@@ -43,9 +40,6 @@ def verify_screenshot(user_id, message):
         del pending_feedback[user_id]  
     else:
         bot.reply_to(message, "❌ AB SCREENSHOT BHEJNE KI ZAROORAT NAHI HAI!")
-
-if __name__ == "__main__":
-    start_bot()
 
 # HANDLE ATTACK COMMAND
 @bot.message_handler(commands=['RS'])
