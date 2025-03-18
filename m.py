@@ -345,7 +345,7 @@ def handle_attack(message):
         return
 
     if user_id not in allowed_users:
-        bot.reply_to(message, "❌ KEY BUY KRKE AANA MATHERCOD! FREE MAIN NHI MILEGA DM- @R_DANGER77 ")
+        bot.reply_to(message, "❌ KEY BUY KRKE AANA MATHERCHOD! FREE MAIN NHI MILEGA DM- @R_DANGER77 ")
         return
 
     command = message.text.split()
