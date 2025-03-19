@@ -14,7 +14,7 @@ ADMINS = [7129010361]
 
 # ✅ GLOBAL VARIABLES
 active_attacks = {}  # अटैक स्टेटस ट्रैक करेगा
-verified_users = set()  # वेरिफिकेशन पास करने वाले यूजर्स
+pending_verification = {}  # वेरिफिकेशन के लिए यूजर्स लिस्ट
 user_attack_count = {}
 
 # ✅ CHECK IF USER IS IN CHANNEL
@@ -43,7 +43,7 @@ def handle_attack(message):
         bot.reply_to(message, "⚠️ **EK TIME MAIN 1 HI ATTACK ALLOWED HAI!**\n👉 **PURANA KHATAM HONE DO! `/check` KARO!**")
         return
 
-    if user_id not in verified_users:
+    if user_id in pending_verification:
         bot.reply_to(message, "🚫 **PEHLE PURANE ATTACK KA SCREENSHOT BHEJ, TABHI NAYA ATTACK LAGEGA!**")
         return
 
@@ -66,7 +66,7 @@ def handle_attack(message):
 
     start_time = datetime.datetime.now()
     end_time = start_time + datetime.timedelta(seconds=time_duration)
-    active_attacks[user_id] = [(target, port, end_time)]
+    active_attacks[user_id] = (target, port, end_time)
 
     bot.send_message(
         message.chat.id,
@@ -94,7 +94,7 @@ def handle_attack(message):
                 "📸 **AB TURANT SCREENSHOT BHEJ, WARNA AGLA ATTACK NAHI LAGEGA!**",
                 parse_mode="Markdown"
             )
-            verified_users.discard(user_id)  # ✅ वेरिफिकेशन हटाओ
+            pending_verification[user_id] = True  # ✅ अब यूजर को स्क्रीनशॉट भेजना पड़ेगा
             del active_attacks[user_id]  # ✅ अटैक खत्म होते ही डेटा क्लियर
 
     threading.Thread(target=attack_execution).start()
@@ -104,15 +104,15 @@ def handle_attack(message):
 def verify_screenshot(message):
     user_id = message.from_user.id
 
-    if user_id not in active_attacks:
-        bot.reply_to(message, "❌ **TERE KOI ACTIVE ATTACK NAHI MILA! SCREENSHOT FALTU NA BHEJ!**")
+    if user_id not in pending_verification:
+        bot.reply_to(message, "❌ **TERE KOI PENDING VERIFICATION NAHI HAI! SCREENSHOT FALTU NA BHEJ!**")
         return
 
     # ✅ SCREENSHOT CHANNEL FORWARD
     file_id = message.photo[-1].file_id
     bot.send_photo(SCREENSHOT_CHANNEL, file_id, caption=f"📸 **VERIFIED SCREENSHOT FROM:** `{user_id}`")
 
-    verified_users.add(user_id)  # ✅ यूजर को वेरिफाइड लिस्ट में ऐड कर दिया
+    del pending_verification[user_id]  # ✅ अब यूजर अटैक कर सकता है
     bot.reply_to(message, "✅ **SCREENSHOT VERIFY HO GAYA! AB TU NEXT ATTACK KAR SAKTA HAI!**")
 
 # ✅ ATTACK STATS COMMAND
@@ -122,8 +122,7 @@ def attack_stats(message):
     now = datetime.datetime.now()
 
     for user in list(active_attacks.keys()):
-        active_attacks[user] = [attack for attack in active_attacks[user] if attack[2] > now]
-        if not active_attacks[user]:
+        if active_attacks[user][2] <= now:
             del active_attacks[user]
 
     if not active_attacks:
@@ -131,16 +130,15 @@ def attack_stats(message):
         return
 
     stats_message = "📊 **ACTIVE ATTACKS:**\n\n"
-    for user, attacks in active_attacks.items():
-        stats_message += f"👤 **USER ID:** `{user}`\n"
-        for target, port, end_time in attacks:
-            remaining_time = (end_time - now).total_seconds()
-            stats_message += (
-                f"🎯 **TARGET:** `{target}`\n"
-                f"📍 **PORT:** `{port}`\n"
-                f"⏳ **ENDS IN:** `{int(remaining_time)}s`\n"
-                f"🕒 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n\n"
-            )
+    for user, (target, port, end_time) in active_attacks.items():
+        remaining_time = (end_time - now).total_seconds()
+        stats_message += (
+            f"👤 **USER ID:** `{user}`\n"
+            f"🎯 **TARGET:** `{target}`\n"
+            f"📍 **PORT:** `{port}`\n"
+            f"⏳ **ENDS IN:** `{int(remaining_time)}s`\n"
+            f"🕒 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n\n"
+        )
 
     bot.reply_to(message, stats_message, parse_mode="Markdown")
 
