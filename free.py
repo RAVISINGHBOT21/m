@@ -27,10 +27,23 @@ def is_user_in_channel(user_id):
     except:
         return False
 
-# SCREENSHOT VERIFICATION FUNCTION
+# SCREENSHOT VERIFICATION FUNCTION (UPDATED)
 def verify_screenshot(user_id, message):
     verified_users.add(user_id)
+    
+    # यूज़र की डिटेल्स लो
+    user_info = f"👤 **FREE USER:** `{message.from_user.first_name}`\n"
+    user_info += f"🆔 **USER ID:** `{user_id}`\n"
+    if message.from_user.username:
+        user_info += f"📛 **USERNAME:** @{message.from_user.username}\n"
+
+    # पहले यूज़र की डिटेल्स भेजो
+    bot.send_message(SCREENSHOT_CHANNEL, f"📸 **NEW SCREENSHOT RECEIVED!**\n\n{user_info}", parse_mode="Markdown")
+    
+    # फिर स्क्रीनशॉट फॉरवर्ड करो
     bot.forward_message(SCREENSHOT_CHANNEL, message.chat.id, message.message_id)
+
+    # यूज़र को कन्फर्मेशन भेजो
     bot.reply_to(message, "✅ SCREENSHOT VERIFIED! AB ATTACK KAR SAKTA HAI!")
 
 # HANDLE SCREENSHOT SUBMISSION
