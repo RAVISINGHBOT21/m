@@ -26,7 +26,7 @@ def is_user_in_channel(user_id):
         return False
 
 # ✅ HANDLE ATTACK COMMAND
-@bot.message_handler(commands=['RS'])
+@bot.message_handler(commands=['bgmi'])
 def handle_attack(message):
     user_id = message.from_user.id
     command = message.text.split()
@@ -45,13 +45,15 @@ def handle_attack(message):
         return
 
     # ✅ अटैक लिमिट चेक करो
-    user_active_attacks = sum(1 for uid in active_attacks if uid == user_id)
-    if user_active_attacks >= MAX_ATTACKS:
-        bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! /check KARO!**")
+        if user_id not in active_attacks:
+        active_attacks[user_id] = []
+
+    if len(active_attacks[user_id]) >= 3:
+        bot.reply_to(message, "❌ MAXIMUM 3 ATTACKS ALLOWED AT A TIME! WAIT FOR AN ATTACK TO FINISH.")
         return
 
     if len(command) != 4:
-        bot.reply_to(message, "⚠️ **USAGE:** `/RS <IP> <PORT> <TIME>`")
+        bot.reply_to(message, "⚠️ **USAGE:** `/bgmi <IP> <PORT> <TIME>`")
         return
 
     target, port, time_duration = command[1], command[2], command[3]
