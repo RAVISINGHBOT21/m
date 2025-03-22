@@ -9,8 +9,7 @@ bot = telebot.TeleBot('8064557178:AAEBVXxX8qFTtXGgVRNeVTM3Y0vvb5RDZ7g')
 
 # ✅ GROUP & CHANNEL SETTINGS
 GROUP_ID = "-1001855389923"
-SCREENSHOT_CHANNEL = "https://t.me/+IvkQGBajJB03NGRl, @KHAPITAR_BALAK77"
-MAIN_CHENNAL = "https://t.me/+IvkQGBajJB03NGRl, @KHAPITAR_BALAK77"
+SCREENSHOT_CHANNEL = "@CLouD_VIP_CHEAT, @KHAPITAR_BALAK77"
 ADMINS = [7129010361, 1851260327]
 
 # ✅ GLOBAL VARIABLES
@@ -37,7 +36,7 @@ def handle_attack(message):
         return
 
     if not is_user_in_channel(user_id):
-        bot.reply_to(message, f"❗ **PEHLE CHANNEL JOIN KARO!** {MAIN_CHENNAL}")
+        bot.reply_to(message, f"❗ **PEHLE CHANNEL JOIN KARO!** {SCREENSHOT_CHANNEL}")
         return
 
     # ✅ पहले पेंडिंग वेरिफिकेशन चेक करो
