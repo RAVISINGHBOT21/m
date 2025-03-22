@@ -69,7 +69,14 @@ if user_active_attacks >= MAX_ATTACKS:
         return
 
     # ✅ पहले ही वेरिफिकेशन सेट कर दो ताकि यूजर तुरंत स्क्रीनशॉट भेज सके
-    pending_verification[user_id] = True  
+    pending_verification[user_id] = True
+
+    bot.send_message(
+        message.chat.id,
+        f"📸 **TURANT SCREENSHOT BHEJ!**\n"
+        f"⚠️ **AGAR NAHI DIYA TO NEXT ATTACK BLOCK HO JAYEGA!**",
+        parse_mode="Markdown"
+    )
 
     start_time = datetime.datetime.now()
     end_time = start_time + datetime.timedelta(seconds=time_duration)
@@ -86,13 +93,6 @@ if user_active_attacks >= MAX_ATTACKS:
         f"🚀 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n"
         f"📸 **NOTE:** **TURANT SCREENSHOT BHEJO, WARNA NEXT ATTACK BLOCK HO JAYEGA!**\n\n"
         f"⚠️ **ATTACK CHALU HAI! /check KARKE STATUS DEKHO!**",
-        parse_mode="Markdown"
-    )
-
-     bot.send_message(
-        message.chat.id,
-        f"📸 **TURANT SCREENSHOT BHEJ!**\n"
-        f"⚠️ **AGAR NAHI DIYA TO NEXT ATTACK BLOCK HO JAYEGA!**",
         parse_mode="Markdown"
     )
 
