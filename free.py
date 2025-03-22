@@ -16,7 +16,7 @@ ADMINS = [7129010361]
 active_attacks = {}  # अटैक स्टेटस ट्रैक करेगा
 pending_verification = {}  # वेरिफिकेशन के लिए यूजर्स लिस्ट
 user_attack_count = {}
-MAX_ATTACKS = 3  # (या जो भी लिमिट चाहिए)
+MAX_ATTACKS = 2  # (या जो भी लिमिट चाहिए)
 
 # ✅ CHECK IF USER IS IN CHANNEL
 def is_user_in_channel(user_id):
@@ -27,7 +27,7 @@ def is_user_in_channel(user_id):
         return False
 
 # ✅ HANDLE ATTACK COMMAND
-@bot.message_handler(commands=['bgmi'])
+@bot.message_handler(commands=['RS'])
 def handle_attack(message):
     user_id = message.from_user.id
     command = message.text.split()
@@ -65,7 +65,7 @@ def handle_attack(message):
         return
 
     if time_duration > 180:
-        bot.reply_to(message, "🚫 **180S SE ZYADA ALLOWED NAHI HAI!**")
+        bot.reply_to(message, "🚫 **120S SE ZYADA ALLOWED NAHI HAI!**")
         return
 
     # ✅ पहले ही वेरिफिकेशन सेट कर दो ताकि यूजर तुरंत स्क्रीनशॉट भेज सके
