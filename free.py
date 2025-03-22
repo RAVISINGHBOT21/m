@@ -46,10 +46,10 @@ def handle_attack(message):
         return
 
     # ✅ अटैक लिमिट चेक करो
-    user_active_attacks = sum(1 for uid in active_attacks if uid == user_id)
-    if user_active_attacks >= MAX_ATTACKS:
-        bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! `/check` KARO!**")
-        return
+user_active_attacks = sum(1 for uid in active_attacks.keys() if uid == user_id)
+if user_active_attacks >= MAX_ATTACKS:
+    bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! /check KARO!**")
+    return
 
     if len(command) != 4:
         bot.reply_to(message, "⚠️ **USAGE:** `/RS <IP> <PORT> <TIME>`")
@@ -71,13 +71,6 @@ def handle_attack(message):
     # ✅ पहले ही वेरिफिकेशन सेट कर दो ताकि यूजर तुरंत स्क्रीनशॉट भेज सके
     pending_verification[user_id] = True  
 
-    bot.send_message(
-        message.chat.id,
-        f"📸 **TURANT SCREENSHOT BHEJ!**\n"
-        f"⚠️ **AGAR NAHI DIYA TO NEXT ATTACK BLOCK HO JAYEGA!**",
-        parse_mode="Markdown"
-    )
-
     start_time = datetime.datetime.now()
     end_time = start_time + datetime.timedelta(seconds=time_duration)
     active_attacks[user_id] = (target, port, end_time)
@@ -92,7 +85,14 @@ def handle_attack(message):
         f"🕒 **START TIME:** `{start_time.strftime('%H:%M:%S')}`\n"
         f"🚀 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n"
         f"📸 **NOTE:** **TURANT SCREENSHOT BHEJO, WARNA NEXT ATTACK BLOCK HO JAYEGA!**\n\n"
-        f"⚠️ **ATTACK CHALU HAI! `/check` KARKE STATUS DEKHO!**",
+        f"⚠️ **ATTACK CHALU HAI! /check KARKE STATUS DEKHO!**",
+        parse_mode="Markdown"
+    )
+
+     bot.send_message(
+        message.chat.id,
+        f"📸 **TURANT SCREENSHOT BHEJ!**\n"
+        f"⚠️ **AGAR NAHI DIYA TO NEXT ATTACK BLOCK HO JAYEGA!**",
         parse_mode="Markdown"
     )
 
