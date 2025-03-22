@@ -262,7 +262,35 @@ def handle_screenshot(message):
 # ✅ Active Attacks को Track करने वाला Dictionary  
 active_attacks = {}
 
-# ✅ /REDEEM Command (User Access)
+# ✅ /MULTIUSERKEY Command (Admin Only)
+@bot.message_handler(commands=['multiuserkey'])
+def generate_multiuser_key(message):
+    if str(message.from_user.id) not in ADMINS:
+        bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+        return
+
+    command = message.text.split()
+    if len(command) < 2:
+        bot.reply_to(message, "⚠ USAGE: /multiuserkey <DAYS> [HOURS]")
+        return
+
+    try:
+        days = int(command[1])
+        hours = int(command[2]) if len(command) > 2 else 0
+    except ValueError:
+        bot.reply_to(message, "❌ DAYS AND HOURS MUST BE NUMBERS!")
+        return
+
+    expiry = datetime.datetime.now(IST) + datetime.timedelta(days=days, hours=hours)
+
+    # ✅ MULTI-USER KEY GENERATION
+    new_key = f"MULTI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+    keys[new_key] = expiry
+    write_keys(keys)
+
+    bot.reply_to(message, f"✅ MULTI-USER KEY GENERATED:\n🔑 `{new_key}`\n📅 Expiry: {days} Days, {hours} Hours", parse_mode="Markdown")
+
+# ✅ Updated /REDEEM Command for Multi-User Key Support
 @bot.message_handler(commands=['redeem'])
 def redeem_key(message):
     command = message.text.split()
@@ -274,31 +302,40 @@ def redeem_key(message):
     user_name = message.from_user.first_name  
     key = command[1]
 
-    # ✅ अगर User पहले से कोई Key Redeem कर चुका है
-    if user_id in redeem_log:
-        bot.reply_to(message, f"❌ YOU HAVE ALREADY REDEEMED A KEY!\n🔑 **Your Key:** `{redeem_log[user_id]}`", parse_mode="Markdown")
-        return
-
-    # ✅ Check अगर Key Exist नहीं करती  
+    # ✅ INVALID KEY CHECK
     if key not in keys:
         bot.reply_to(message, "❌ INVALID KEY! 🔑")  
         return
 
-    # ✅ अगर Key Expired हो गई है  
     expiry_date = keys[key]
     if datetime.datetime.now(IST) > expiry_date:
-        del keys[key]  # ✅ Expired Key हटाओ
+        del keys[key]
         write_keys(keys)
         bot.reply_to(message, f"⏳ THIS KEY HAS **EXPIRED!**\n📅 **Expired On:** `{expiry_date.strftime('%Y-%m-%d %H:%M:%S IST')}`", parse_mode="Markdown")
         return
 
-    # ✅ Check अगर Key पहले से किसी और ने Redeem कर ली है  
+    # ✅ MULTI-USER KEY LOGIC
+    if key.startswith("MULTI-"):
+        allowed_users.add(user_id)
+        redeem_log[user_id] = key
+        save_redeem_log(redeem_log)
+
+        with open(USER_FILE, "a") as file:
+            file.write(f"{user_id}\n")
+
+        bot.reply_to(message, f"🎉 ACCESS GRANTED!\n👤 **User:** `{user_name}`\n🆔 **User ID:** `{user_id}`\n🔑 **Key:** `{key}`\n📅 **Expires On:** `{expiry_date.strftime('%Y-%m-%d %H:%M:%S IST')}`", parse_mode="Markdown")
+        return
+
+    # ✅ NORMAL KEY LOGIC (SINGLE-USE)
+    if user_id in redeem_log:
+        bot.reply_to(message, f"❌ YOU HAVE ALREADY REDEEMED A KEY!\n🔑 **Your Key:** `{redeem_log[user_id]}`", parse_mode="Markdown")
+        return
+
     if key in redeem_log.values():
         existing_user = [uid for uid, k in redeem_log.items() if k == key][0]
         bot.reply_to(message, f"❌ THIS KEY HAS ALREADY BEEN REDEEMED!\n👤 **User ID:** `{existing_user}`", parse_mode="Markdown")
         return
 
-    # ✅ Grant Access & Save User  
     allowed_users.add(user_id)
     redeem_log[user_id] = key
     save_redeem_log(redeem_log)
