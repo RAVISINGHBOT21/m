@@ -16,6 +16,7 @@ ADMINS = [7129010361, 1851260327]
 active_attacks = {}  # अटैक स्टेटस ट्रैक करेगा
 pending_verification = {}  # वेरिफिकेशन के लिए यूजर्स लिस्ट
 user_attack_count = {}
+MAX_ATTACKS = 3  # (या जो भी लिमिट चाहिए)
 
 # ✅ CHECK IF USER IS IN CHANNEL
 def is_user_in_channel(user_id):
@@ -45,15 +46,13 @@ def handle_attack(message):
         return
 
     # ✅ अटैक लिमिट चेक करो
-        if user_id not in active_attacks:
-        active_attacks[user_id] = []
-
-    if len(active_attacks[user_id]) >= 3:
-        bot.reply_to(message, "❌ MAXIMUM 3 ATTACKS ALLOWED AT A TIME! WAIT FOR AN ATTACK TO FINISH.")
+    user_active_attacks = sum(1 for uid in active_attacks if uid == user_id)
+    if user_active_attacks >= MAX_ATTACKS:
+        bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! `/check` KARO!**")
         return
 
     if len(command) != 4:
-        bot.reply_to(message, "⚠️ **USAGE:** `/bgmi <IP> <PORT> <TIME>`")
+        bot.reply_to(message, "⚠️ **USAGE:** `/RS <IP> <PORT> <TIME>`")
         return
 
     target, port, time_duration = command[1], command[2], command[3]
@@ -93,7 +92,7 @@ def handle_attack(message):
         f"🕒 **START TIME:** `{start_time.strftime('%H:%M:%S')}`\n"
         f"🚀 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n"
         f"📸 **NOTE:** **TURANT SCREENSHOT BHEJO, WARNA NEXT ATTACK BLOCK HO JAYEGA!**\n\n"
-        f"⚠️ **ATTACK CHALU HAI! /check KARKE STATUS DEKHO!**",
+        f"⚠️ **ATTACK CHALU HAI! `/check` KARKE STATUS DEKHO!**",
         parse_mode="Markdown"
     )
 
@@ -112,7 +111,7 @@ def handle_attack(message):
             del active_attacks[user_id]  # ✅ अटैक खत्म होते ही डेटा क्लियर
 
     threading.Thread(target=attack_execution).start()
-    
+
 # ✅ SCREENSHOT VERIFICATION SYSTEM
 @bot.message_handler(content_types=['photo'])
 def verify_screenshot(message):
