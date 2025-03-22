@@ -9,7 +9,8 @@ bot = telebot.TeleBot('8064557178:AAEBVXxX8qFTtXGgVRNeVTM3Y0vvb5RDZ7g')
 
 # ✅ GROUP & CHANNEL SETTINGS
 GROUP_ID = "-1001855389923"
-SCREENSHOT_CHANNEL = "@KHAPITAR_BALAK77"
+SCREENSHOT_CHANNEL = "https://t.me/+fFBN482Ct65kM2Y1, @KHAPITAR_BALAK77"
+MAIN_CHENNAL = "https://t.me/+fFBN482Ct65kM2Y1, @KHAPITAR_BALAK77"
 ADMINS = [7129010361]
 
 # ✅ GLOBAL VARIABLES
@@ -36,15 +37,18 @@ def handle_attack(message):
         return
 
     if not is_user_in_channel(user_id):
-        bot.reply_to(message, f"❗ **PEHLE CHANNEL JOIN KARO!** {SCREENSHOT_CHANNEL}")
+        bot.reply_to(message, f"❗ **PEHLE CHANNEL JOIN KARO!** {MAIN_CHENNAL}")
         return
 
-    if user_id in active_attacks:
-        bot.reply_to(message, "⚠️ **EK TIME MAIN 1 HI ATTACK ALLOWED HAI!**\n👉 **PURANA KHATAM HONE DO! `/check` KARO!**")
-        return
-
+    # ✅ पहले पेंडिंग वेरिफिकेशन चेक करो
     if user_id in pending_verification:
         bot.reply_to(message, "🚫 **PEHLE PURANE ATTACK KA SCREENSHOT BHEJ, TABHI NAYA ATTACK LAGEGA!**")
+        return
+
+    # ✅ अटैक लिमिट चेक करो
+    user_active_attacks = sum(1 for uid in active_attacks if uid == user_id)
+    if user_active_attacks >= MAX_ATTACKS:
+        bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! /check KARO!**")
         return
 
     if len(command) != 4:
@@ -60,9 +64,19 @@ def handle_attack(message):
         bot.reply_to(message, "❌ **PORT AUR TIME NUMBER HONE CHAHIYE!**")
         return
 
-    if time_duration > 120:
-        bot.reply_to(message, "🚫 **120S SE ZYADA ALLOWED NAHI HAI!**")
+    if time_duration > 180:
+        bot.reply_to(message, "🚫 **180S SE ZYADA ALLOWED NAHI HAI!**")
         return
+
+    # ✅ पहले ही वेरिफिकेशन सेट कर दो ताकि यूजर तुरंत स्क्रीनशॉट भेज सके
+    pending_verification[user_id] = True  
+
+    bot.send_message(
+        message.chat.id,
+        f"📸 **TURANT SCREENSHOT BHEJ!**\n"
+        f"⚠️ **AGAR NAHI DIYA TO NEXT ATTACK BLOCK HO JAYEGA!**",
+        parse_mode="Markdown"
+    )
 
     start_time = datetime.datetime.now()
     end_time = start_time + datetime.timedelta(seconds=time_duration)
@@ -76,8 +90,9 @@ def handle_attack(message):
         f"📍 **PORT:** `{port}`\n"
         f"⏳ **DURATION:** `{time_duration} SECONDS`\n"
         f"🕒 **START TIME:** `{start_time.strftime('%H:%M:%S')}`\n"
-        f"🚀 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n\n"
-        f"⚠️ **ATTACK CHALU HAI! `/check` KARKE STATUS DEKHO!**",
+        f"🚀 **END TIME:** `{end_time.strftime('%H:%M:%S')}`\n"
+        f"📸 **NOTE:** **TURANT SCREENSHOT BHEJO, WARNA NEXT ATTACK BLOCK HO JAYEGA!**\n\n"
+        f"⚠️ **ATTACK CHALU HAI! /check KARKE STATUS DEKHO!**",
         parse_mode="Markdown"
     )
 
@@ -90,15 +105,13 @@ def handle_attack(message):
         finally:
             bot.send_message(
                 message.chat.id,
-                "✅ **ATTACK KHATAM HO GAYA!** 🎯\n"
-                "📸 **AB TURANT SCREENSHOT BHEJ, WARNA AGLA ATTACK NAHI LAGEGA!**",
+                "✅ **ATTACK KHATAM HO GAYA!** 🎯",
                 parse_mode="Markdown"
             )
-            pending_verification[user_id] = True  # ✅ अब यूजर को स्क्रीनशॉट भेजना पड़ेगा
             del active_attacks[user_id]  # ✅ अटैक खत्म होते ही डेटा क्लियर
 
     threading.Thread(target=attack_execution).start()
-
+    
 # ✅ SCREENSHOT VERIFICATION SYSTEM
 @bot.message_handler(content_types=['photo'])
 def verify_screenshot(message):
