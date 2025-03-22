@@ -5,12 +5,12 @@ import subprocess
 import threading
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('8064557178:AAEBVXxX8qFTtXGgVRNeVTM3Y0vvb5RDZ7g')
+bot = telebot.TeleBot('8111473127:AAGHKRUisQdbZqYpmdUIN_eemwclYLfOYhM')
 
 # ✅ GROUP & CHANNEL SETTINGS
-GROUP_ID = "-1001855389923"
-SCREENSHOT_CHANNEL = "@CLouD_VIP_CHEAT, @KHAPITAR_BALAK77"
-ADMINS = [7129010361, 1851260327]
+GROUP_ID = "-1002369239894"
+SCREENSHOT_CHANNEL = "@KHAPITAR_BALAK77"
+ADMINS = [7129010361]
 
 # ✅ GLOBAL VARIABLES
 active_attacks = {}  # अटैक स्टेटस ट्रैक करेगा
@@ -46,10 +46,10 @@ def handle_attack(message):
         return
 
     # ✅ अटैक लिमिट चेक करो
-user_active_attacks = sum(1 for uid in active_attacks.keys() if uid == user_id)
-if user_active_attacks >= MAX_ATTACKS:
-    bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! /check KARO!**")
-    return
+    user_active_attacks = sum(1 for uid in active_attacks.keys() if uid == user_id)
+    if user_active_attacks >= MAX_ATTACKS:
+        bot.reply_to(message, f"⚠️ **ATTACK LIMIT ({MAX_ATTACKS}) POORI HO CHUKI HAI!**\n👉 **PEHLE PURANE KHATAM HONE DO! /check KARO!**")
+        return
 
     if len(command) != 4:
         bot.reply_to(message, "⚠️ **USAGE:** `/RS <IP> <PORT> <TIME>`")
