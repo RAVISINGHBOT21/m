@@ -13,10 +13,10 @@ import logging
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton  # ✅ FIXED IMPORT ERROR
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAF6whw5eBZ8bspvKNYgV1pqsVoYealO6qY')
+bot = telebot.TeleBot('7053228704:AAGLAJFlzJ6M2XZC9HEABD6B5PVubnd-FqY')
 
 # ✅ GROUP AND ADMIN DETAILS
-GROUP_ID = "-1002252633433"
+GROUP_ID = "-4611762264"
 ADMINS = ["7129010361"]
 
 SCREENSHOT_CHANNEL = "@KHAPITAR_BALAK77"
