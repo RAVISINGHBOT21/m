@@ -13,13 +13,16 @@ import logging
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton  # ✅ FIXED IMPORT ERROR
 
 # ✅ TELEGRAM BOT TOKEN
-bot = telebot.TeleBot('7053228704:AAGLAJFlzJ6M2XZC9HEABD6B5PVubnd-FqY')
+bot = telebot.TeleBot('8111473127:AAGdUoAxw0bvdwtWezRjQ7hMVvKQYT_RO3k')
 
 # ✅ GROUP AND ADMIN DETAILS
-GROUP_ID = "-4611762264"
+GROUP_ID = "-1002252633433"
 ADMINS = ["7129010361"]
-
+ADMIN_IDS = [7129010361]
 SCREENSHOT_CHANNEL = "@KHAPITAR_BALAK77"
+
+# Default max duration (in seconds)
+MAX_DURATION = 300
 
 # ✅ FILE PATHS
 USER_FILE = "users.txt"
@@ -232,21 +235,45 @@ def generate_new_key(message):
 
     bot.reply_to(message, f"✅ NEW KEY GENERATED:\n?? `{new_key}`\n📅 Expiry: {days} Days, {hours} Hours", parse_mode="Markdown")
 
-# ✅ /REMOVEKEY Command (Admin Only)
-@bot.message_handler(commands=['removekey'])
-def remove_existing_key(message):
-    if str(message.from_user.id) not in ADMINS:
-         bot.reply_to(message, "❌ ADMIN ONLY COMMAND!")
+# Example fix for /removekey (Make sure only admin can use it)
 
-    command = message.text.split()
-    if len(command) != 2:
-        bot.reply_to(message, "⚠ USAGE: /removekey <KEY>")
-        return 
+# max time 
 
-    if remove_key(command[1]):
-        bot.reply_to(message, "✅ KEY REMOVED SUCCESSFULLY!")
+@bot.message_handler(commands=['maxtime'])
+def set_max_duration(message):
+    global MAX_DURATION
+    user_id = message.from_user.id  # Get user ID
+    
+    if user_id in ADMIN_IDS:  # Check if user is an admin
+        try:
+            command_parts = message.text.split()
+            if len(command_parts) != 2:
+                bot.reply_to(message, "Usage: /setmaxduration [seconds]")
+                return
+
+            new_duration = int(command_parts[1])
+            if new_duration <= 0:
+                bot.reply_to(message, "Duration must be a positive number!")
+                return
+
+            MAX_DURATION = new_duration
+            bot.reply_to(message, f"Max duration updated to {MAX_DURATION} seconds!")
+        except ValueError:
+            bot.reply_to(message, "Invalid number! Please enter a valid duration in seconds.")
     else:
-        bot.reply_to(message, "❌ KEY NOT FOUND!")
+        bot.reply_to(message,  "❌❌❌ ONLY MY OWNER !")
+
+@bot.message_handler(commands=['removekey'])
+def remove_key(message):
+    user_id = message.from_user.id  # Get user ID
+    if user_id in ADMIN_IDS:  # Check if user is an admin
+        # Your existing remove key logic here
+        bot.reply_to(message, "Key removed successfully!")
+    else:
+        bot.reply_to(message, "❌❌❌  ONLY MY OWNER!")
+
+# Define your ADMIN_IDS list
+ADMIN_IDS = [7129010361]  # Replace with actual admin user IDs
 
 # ✅ FIXED: SCREENSHOT SYSTEM (Now Always Forwards)
 @bot.message_handler(content_types=['photo'])
@@ -352,14 +379,10 @@ def handle_attack(message):
     chat_id = str(message.chat.id)
 
     if not is_user_allowed(user_id):  # ✅ Expired Key Check
-        bot.reply_to(message, "⏳ **YOUR KEY NOT APPROVED! PLEASE REDEEM A NEW KEY.**")
+        bot.reply_to(message, "⏳ **PEHLW KEY BUY KRO**")
 
     if chat_id != GROUP_ID:
         bot.reply_to(message, "❌ YOU CAN USE THIS COMMAND ONLY IN THE ATTACK GROUP!")
-        return
-
-    if user_id not in allowed_users:
-        bot.reply_to(message, "❌ KEY BUY KRKE AANA MATHERCHOD! FREE MAIN NHI MILEGA DM- @R_DANGER77 ")
         return
 
     command = message.text.split()
@@ -376,15 +399,15 @@ def handle_attack(message):
         bot.reply_to(message, "❌ PORT AND TIME MUST BE NUMBERS!")
         return
 
-    if time_duration > 240:
-        bot.reply_to(message, "🚫 MAX ATTACK TIME IS 240 SECONDS!")
-        return
+    if time_duration MAX_DURATION:  # Use admin-set MAX_DURATION
+            bot.reply_to(message, f"🚫 MAX ATTACK TIME IS {MAX_DURATION} SECONDS!")
+            return
 
     if user_id not in active_attacks:
         active_attacks[user_id] = []
 
-    if len(active_attacks[user_id]) >= 3:
-        bot.reply_to(message, "❌ MAXIMUM 3 ATTACKS ALLOWED AT A TIME! WAIT FOR AN ATTACK TO FINISH.")
+    if len(active_attacks[user_id]) >= 2:
+        bot.reply_to(message, "❌ MAXIMUM 2 ATTACKS ALLOWED AT A TIME! WAIT FOR AN ATTACK TO FINISH.")
         return
 
     end_time = datetime.datetime.now(IST) + datetime.timedelta(seconds=time_duration)
