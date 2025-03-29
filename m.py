@@ -346,7 +346,7 @@ def redeem_key(message):
     bot.reply_to(message, f"🎉 ACCESS GRANTED!\n👤 **User:** `{user_name}`\n🆔 **User ID:** `{user_id}`\n🔑 **Key:** `{key}`\n📅 **Expires On:** `{expiry_date.strftime('%Y-%m-%d %H:%M:%S IST')}`", parse_mode="Markdown")
 
 ## ✅ /RS Attack Command (Auto-Remove from /stats)
-@bot.message_handler(commands=['RS'])
+@bot.message_handler(commands=['bgmi'])
 def handle_attack(message):
     user_id = str(message.from_user.id)
     chat_id = str(message.chat.id)
@@ -364,7 +364,7 @@ def handle_attack(message):
 
     command = message.text.split()
     if len(command) != 4:
-        bot.reply_to(message, "⚠ USAGE: /RS <IP> <PORT> <TIME>")
+        bot.reply_to(message, "⚠ USAGE: /bgmi <IP> <PORT> <TIME>")
         return
 
     target, port, time_duration = command[1], command[2], command[3]
